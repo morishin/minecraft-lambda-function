@@ -2,6 +2,7 @@ import os
 import time
 
 import requests
+from retry import retry
 
 import boto3
 import digitalocean
@@ -45,11 +46,9 @@ def create_server():
     public_key = "ssh-rsa " + private_key.get_base64()
     droplet = _create_droplet(public_key)
 
-    time.sleep(5)
-
     client = paramiko.SSHClient()
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    client.connect(hostname=droplet.ip_address, username="root", pkey=private_key)
+    _ssh_connect(client, hostname=droplet.ip_address, username="root", pkey=private_key)
 
     bucket_location = boto3.client("s3").get_bucket_location(Bucket=S3_BUCKET_NAME)["LocationConstraint"]
     world_path = "https://s3-%s.amazonaws.com/%s/world.zip" % (bucket_location, S3_BUCKET_NAME)
@@ -73,7 +72,7 @@ def upload_world():
     client = paramiko.SSHClient()
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
-    client.connect(hostname=droplet.ip_address, username="root", pkey=private_key)
+    _ssh_connect(client, hostname=droplet.ip_address, username="root", pkey=private_key)
 
     commands = [
         "cd /root",
@@ -110,6 +109,11 @@ def destroy_server():
     message = ":boom: instance destroyed. IP: " + ip_address
     _slack_notify(message)
     return message
+
+
+@retry(tries=4, delay=5)
+def _ssh_connect(client, hostname, username, pkey):
+    client.connect(hostname=hostname, username=username, pkey=pkey)
 
 
 def _exec_commands(client, commands):
