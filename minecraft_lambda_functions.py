@@ -1,13 +1,12 @@
 import os
 import time
 
-import requests
-from retry import retry
-
 import boto3
 import digitalocean
 import paramiko
+import requests
 from Crypto.PublicKey import RSA
+from retry import retry
 
 DIGITALOCEAN_API_TOKEN = os.getenv("DIGITALOCEAN_API_TOKEN")
 AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
@@ -19,7 +18,7 @@ MINECRAFT_LAMBDA_FUNCTIONS_TOKEN = os.getenv("MINECRAFT_LAMBDA_FUNCTIONS_TOKEN")
 
 def lambda_handler(event, context):
     if event["token"] != MINECRAFT_LAMBDA_FUNCTIONS_TOKEN:
-        return {"message": 'Please set valid token to request body. ex. {"token": <MINECRAFT_LAMBDA_FUNCTIONS_TOKEN>, "text": "create"}. Your request body is ' + str(event)}
+        return {"message": ":no_good: Invalid token. Your request body is: " + str(event)}
 
     try:
         action = event["text"]
@@ -35,9 +34,9 @@ def lambda_handler(event, context):
         else:
             message = "Invalid action: " + action
     except Exception as e:
-        message = e.message
-        _slack_notify(message)
+        message = ":no_good: Error: " + e.message
 
+    _slack_notify(message)
     return {"message": message}
 
 
@@ -113,6 +112,7 @@ def destroy_server():
 
 @retry(tries=4, delay=5)
 def _ssh_connect(client, hostname, username, pkey):
+    print "Trying SSH connection..."
     client.connect(hostname=hostname, username=username, pkey=pkey)
 
 
