@@ -13,11 +13,11 @@ AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
 AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
 S3_BUCKET_NAME = os.getenv("S3_BUCKET_NAME")
 SLACK_INCOMING_WEBHOOK_URL = os.getenv("SLACK_INCOMING_WEBHOOK_URL")
-MINECRAFT_LAMBDA_FUNCTIONS_TOKEN = os.getenv("MINECRAFT_LAMBDA_FUNCTIONS_TOKEN")
+MINECRAFT_LAMBDA_FUNCTION_TOKEN = os.getenv("MINECRAFT_LAMBDA_FUNCTION_TOKEN")
 
 
 def lambda_handler(event, context):
-    if event["token"] != MINECRAFT_LAMBDA_FUNCTIONS_TOKEN:
+    if event["token"] != MINECRAFT_LAMBDA_FUNCTION_TOKEN:
         return {"message": ":no_good: Invalid token. Your request body is: " + str(event)}
 
     try:
