@@ -9,6 +9,6 @@ RUN cd /tmp && \
     curl https://bootstrap.pypa.io/get-pip.py | python2.7 - && \
     pip install virtualenv
 WORKDIR /app
-CMD virtualenv -p python2.7 venv && \
-    source venv/bin/activate && \
+CMD virtualenv -p python2.7 venv-for-deployment && \
+    source venv-for-deployment/bin/activate && \
     pip install -r requirements.txt

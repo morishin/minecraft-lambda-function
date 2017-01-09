@@ -58,7 +58,6 @@ def create_server():
     _exec_commands(client, commands)
 
     message = ":hammer_and_pick: instance created. IP: " + droplet.ip_address
-    _slack_notify(message)
     return message
 
 
@@ -94,7 +93,6 @@ def upload_world():
     world_path = "https://s3-%s.amazonaws.com/%s/world.zip" % (bucket_location, S3_BUCKET_NAME)
 
     message = ":rocket: world.zip uploaded. URL: " + world_path
-    _slack_notify(message)
     return message
 
 
@@ -106,7 +104,6 @@ def destroy_server():
     droplet.destroy()
 
     message = ":boom: instance destroyed. IP: " + ip_address
-    _slack_notify(message)
     return message
 
 

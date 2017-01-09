@@ -1,4 +1,5 @@
 *.zip
+venv-for-deployment/
 
 # Created by https://www.gitignore.io/api/python
 
