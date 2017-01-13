@@ -1,6 +1,8 @@
 # minecraft-lambda-function
 AWS Lambda function for managing Minecraft server.
 
+You can play Minecraft Multiplayer $0.03 / hour. (See [DigitalOcean Pricing](https://www.digitalocean.com/pricing/#droplet))
+
 ## Features
 ### create⚒
 <img src="https://cloud.githubusercontent.com/assets/1413408/21756322/2dda13ea-d663-11e6-9c16-53fe50475df0.png" width="640" />
