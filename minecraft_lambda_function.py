@@ -29,6 +29,9 @@ def lambda_handler(event, context):
             _slack_notify(":muscle: Uploading world data...")
             message = upload_world()
         elif action == "destroy":
+            _slack_notify(":muscle: Uploading world data...")
+            message = upload_world()
+            _slack_notify(message)
             _slack_notify(":muscle: Destroying server...")
             message = destroy_server()
         else:
