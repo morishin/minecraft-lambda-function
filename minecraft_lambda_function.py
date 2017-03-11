@@ -53,7 +53,7 @@ def create_server():
     world_path = "https://s3-%s.amazonaws.com/%s/world.zip" % (bucket_location, S3_BUCKET_NAME)
 
     commands = [
-        "docker run -d -e EULA=TRUE -e WORLD=%s --name minecraft -p 25565:25565 itzg/minecraft-server" % (world_path)
+        "docker run -d -e EULA=TRUE -e WORLD=%s -e SLACK_WEBHOOK_URL=%s --name minecraft -p 25565:25565 morishin127/minecraft-server" % (world_path, SLACK_INCOMING_WEBHOOK_URL)
     ]
     _exec_commands(client, commands)
 
@@ -92,7 +92,7 @@ def upload_world():
     bucket_location = boto3.client("s3").get_bucket_location(Bucket=S3_BUCKET_NAME)["LocationConstraint"]
     world_path = "https://s3-%s.amazonaws.com/%s/world.zip" % (bucket_location, S3_BUCKET_NAME)
 
-    message = ":rocket: world.zip uploaded. URL: " + world_path
+    message = ":rocket: Uploaded world.zip: " + world_path
     return message
 
 
