@@ -32,7 +32,6 @@ def lambda_handler(event, context):
             message = upload_world()
             _slack_notify(message)
         elif action == "destroy":
-            # upload
             _slack_notify(":muscle: Uploading world data...")
             message = upload_world()
             _slack_notify(message)
@@ -67,7 +66,7 @@ def create_server():
     ]
     _exec_commands(client, commands)
 
-    message = ":hammer_and_pick: instance created. IP: `" + droplet.ip_address + "`"
+    message = ":hammer_and_pick: Created instance: `" + droplet.ip_address + "`"
     return message
 
 
@@ -113,7 +112,7 @@ def destroy_server():
     ip_address = droplet.ip_address
     droplet.destroy()
 
-    message = ":boom: instance destroyed. IP: `" + ip_address + "`"
+    message = ":boom: Destroyed instance: `" + ip_address + "`"
     return message
 
 
