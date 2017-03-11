@@ -25,18 +25,27 @@ def lambda_handler(event, context):
         if action == "create":
             _slack_notify(":muscle: Creating server...")
             message = create_server()
+            _slack_notify(message)
         elif action == "upload":
             _slack_notify(":muscle: Uploading world data...")
             message = upload_world()
+            _slack_notify(message)
         elif action == "destroy":
+            # upload
+            _slack_notify(":muscle: Uploading world data...")
+            message = upload_world()
+            _slack_notify(message)
+
             _slack_notify(":muscle: Destroying server...")
             message = destroy_server()
+            _slack_notify(message)
         else:
             message = "Invalid action: " + action
+            _slack_notify(message)
     except Exception as e:
         message = ":no_good: Error: " + e.message
+        _slack_notify(message)
 
-    _slack_notify(message)
     return {"message": message}
 
 
