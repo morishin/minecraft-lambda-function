@@ -66,7 +66,7 @@ def create_server():
     ]
     _exec_commands(client, commands)
 
-    message = ":hammer_and_pick: instance created. IP: " + droplet.ip_address
+    message = ":hammer_and_pick: instance created. IP: `" + droplet.ip_address + "`"
     return message
 
 
@@ -112,7 +112,7 @@ def destroy_server():
     ip_address = droplet.ip_address
     droplet.destroy()
 
-    message = ":boom: instance destroyed. IP: " + ip_address
+    message = ":boom: instance destroyed. IP: `" + ip_address + "`"
     return message
 
 
