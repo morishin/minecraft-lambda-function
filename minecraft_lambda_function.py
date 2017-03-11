@@ -9,6 +9,7 @@ from Crypto.PublicKey import RSA
 from retry import retry
 
 DIGITALOCEAN_API_TOKEN = os.getenv("DIGITALOCEAN_API_TOKEN")
+DIGITALOCEAN_REGION_SLUG = os.getenv("DIGITALOCEAN_REGION_SLUG")
 AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
 AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
 S3_BUCKET_NAME = os.getenv("S3_BUCKET_NAME")
@@ -143,7 +144,7 @@ def _create_droplet(public_key):
 
     droplet = digitalocean.Droplet(token=DIGITALOCEAN_API_TOKEN,
                                    name="minecraft",
-                                   region="sgp1",
+                                   region= DIGITALOCEAN_REGION_SLUG if DIGITALOCEAN_REGION_SLUG is not None else "sgp1",
                                    image="docker-16-04",
                                    size_slug="2gb",
                                    ssh_keys=keys,
