@@ -144,7 +144,7 @@ def _create_droplet(public_key):
     droplet = digitalocean.Droplet(token=DIGITALOCEAN_API_TOKEN,
                                    name="minecraft",
                                    region= DIGITALOCEAN_REGION_SLUG if DIGITALOCEAN_REGION_SLUG is not None else "sgp1",
-                                   image="docker-16-04",
+                                   image="docker-18-04",
                                    size_slug="2gb",
                                    ssh_keys=keys,
                                    backups=False)
