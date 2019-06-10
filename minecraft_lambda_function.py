@@ -116,7 +116,7 @@ def destroy_server():
     return message
 
 
-@retry(tries=4, delay=5)
+@retry(tries=30, delay=5)
 def _ssh_connect(client, hostname, username, pkey):
     print "Trying SSH connection..."
     client.connect(hostname=hostname, username=username, pkey=pkey)
