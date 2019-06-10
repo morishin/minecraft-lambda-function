@@ -1,5 +1,5 @@
 boto3==1.4.3
-paramiko==2.1.1
+paramiko==2.1.6
 python-digitalocean==1.10.1
 requests==2.12.4
 pycrypto==2.6.1
