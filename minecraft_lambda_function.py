@@ -39,6 +39,10 @@ def lambda_handler(event, context):
             _slack_notify(":muscle: Destroying server...")
             message = destroy_server()
             _slack_notify(message)
+        elif action == "destroy_without_saving":
+            _slack_notify(":muscle: Destroying server...")
+            message = destroy_server()
+            _slack_notify(message)
         else:
             message = "Invalid action: " + action
             _slack_notify(message)
@@ -56,7 +60,8 @@ def create_server():
 
     client = paramiko.SSHClient()
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    _ssh_connect(client, hostname=droplet.ip_address, username="root", pkey=private_key)
+    ip_address = _get_ip_address_of_droplet(droplet)
+    _ssh_connect(client, hostname=ip_address, username="root", pkey=private_key)
 
     bucket_location = boto3.client("s3").get_bucket_location(Bucket=S3_BUCKET_NAME)["LocationConstraint"]
     world_path = "https://s3-%s.amazonaws.com/%s/world.zip" % (bucket_location, S3_BUCKET_NAME)
@@ -66,7 +71,7 @@ def create_server():
     ]
     _exec_commands(client, commands)
 
-    message = ":hammer_and_pick: Created instance: `" + droplet.ip_address + "`"
+    message = ":hammer_and_pick: Created instance: `" + ip_address + "`"
     return message
 
 
@@ -79,7 +84,8 @@ def upload_world():
     client = paramiko.SSHClient()
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
-    _ssh_connect(client, hostname=droplet.ip_address, username="root", pkey=private_key)
+    ip_address = _get_ip_address_of_droplet(droplet)
+    _ssh_connect(client, hostname=ip_address, username="root", pkey=private_key)
 
     commands = [
         "cd /root",
@@ -109,16 +115,16 @@ def destroy_server():
     manager = digitalocean.Manager(token=DIGITALOCEAN_API_TOKEN)
     all_droplets = manager.get_all_droplets()
     droplet = filter(lambda droplet: droplet.name == "minecraft", all_droplets)[0]
-    ip_address = droplet.ip_address
+    ip_address = _get_ip_address_of_droplet(droplet)
     droplet.destroy()
 
     message = ":boom: Destroyed instance: `" + ip_address + "`"
     return message
 
 
-@retry(tries=4, delay=5)
+@retry(tries=30, delay=5)
 def _ssh_connect(client, hostname, username, pkey):
-    print "Trying SSH connection..."
+    print "Trying SSH connection... IP: %s" % (hostname)
     client.connect(hostname=hostname, username=username, pkey=pkey)
 
 
@@ -133,27 +139,40 @@ def _exec_commands(client, commands):
 def _create_droplet(public_key):
     key_name = 'minecraft-lambda-function-' + public_key[-7:]
     manager = digitalocean.Manager(token=DIGITALOCEAN_API_TOKEN)
-    keys = manager.get_all_sshkeys()
-    if len(filter(lambda k: k.name == key_name, keys)) == 0:
-        key = digitalocean.SSHKey(token=DIGITALOCEAN_API_TOKEN,
-                                  name=key_name,
-                                  public_key=public_key)
-        key.create()
-        keys.append(key)
 
-    droplet = digitalocean.Droplet(token=DIGITALOCEAN_API_TOKEN,
-                                   name="minecraft",
-                                   region= DIGITALOCEAN_REGION_SLUG if DIGITALOCEAN_REGION_SLUG is not None else "sgp1",
-                                   image="docker-18-04",
-                                   size_slug="2gb",
-                                   ssh_keys=keys,
-                                   backups=False)
-    droplet.create()
+    all_droplets = manager.get_all_droplets()
+    existing_droplets = filter(lambda droplet: droplet.name == "minecraft", all_droplets)
 
-    manager = digitalocean.Manager(token=DIGITALOCEAN_API_TOKEN)
-    created_droplet = manager.get_droplet(droplet.id)
-    return created_droplet
+    minecraft_droplet = None
 
+    if len(existing_droplets) == 0:
+        keys = manager.get_all_sshkeys()
+        if len(filter(lambda k: k.name == key_name, keys)) == 0:
+            key = digitalocean.SSHKey(token=DIGITALOCEAN_API_TOKEN,
+                                    name=key_name,
+                                    public_key=public_key)
+            key.create()
+            keys.append(key)
+        droplet = digitalocean.Droplet(token=DIGITALOCEAN_API_TOKEN,
+                                    name="minecraft",
+                                    region= DIGITALOCEAN_REGION_SLUG if DIGITALOCEAN_REGION_SLUG is not None else "sgp1",
+                                    image="docker-18-04",
+                                    size_slug="2gb",
+                                    ssh_keys=keys,
+                                    backups=False)
+        droplet.create()
+        minecraft_droplet = manager.get_droplet(droplet.id)
+    else:
+        minecraft_droplet = existing_droplets[0]
+
+    return minecraft_droplet
+
+@retry(tries=10, delay=3)
+def _get_ip_address_of_droplet(droplet):
+    droplet.load()
+    if droplet.ip_address is None:
+        raise Exception("Failed to obtain IP address")
+    return droplet.ip_address
 
 def _get_ssh_private_key():
     key_file_name = "id_rsa"
