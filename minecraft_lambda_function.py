@@ -9,13 +9,16 @@ from Crypto.PublicKey import RSA
 from retry import retry
 
 DIGITALOCEAN_API_TOKEN = os.getenv("DIGITALOCEAN_API_TOKEN")
-DIGITALOCEAN_REGION_SLUG = os.getenv("DIGITALOCEAN_REGION_SLUG")
+DIGITALOCEAN_REGION_SLUG = os.getenv("DIGITALOCEAN_REGION_SLUG", "sgp1")
+DIGITAL_OCEAN_SIZE_SLUG = os.getenv("DIGITAL_OCEAN_SIZE_SLUG", "s-2vcpu-2gb")
 AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
 AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
 S3_BUCKET_NAME = os.getenv("S3_BUCKET_NAME")
 SLACK_INCOMING_WEBHOOK_URL = os.getenv("SLACK_INCOMING_WEBHOOK_URL")
 MINECRAFT_LAMBDA_FUNCTION_TOKEN = os.getenv("MINECRAFT_LAMBDA_FUNCTION_TOKEN")
-
+MEMORY = os.getenv("MEMORY", "1G")
+RESROUCE_PACK = os.getenv("RESROUCE_PACK")
+RESOURCE_PACK_SHA1 = os.getenv("RESOURCE_PACK_SHA1")
 
 def lambda_handler(event, context):
     if event["token"] != MINECRAFT_LAMBDA_FUNCTION_TOKEN:
@@ -66,8 +69,19 @@ def create_server():
     bucket_location = boto3.client("s3").get_bucket_location(Bucket=S3_BUCKET_NAME)["LocationConstraint"]
     world_path = "https://s3-%s.amazonaws.com/%s/world.zip" % (bucket_location, S3_BUCKET_NAME)
 
+    env = {
+        "EULA": "TRUE",
+        "WORLD": world_path,
+        "SLACK_WEBHOOK_URL": SLACK_INCOMING_WEBHOOK_URL,
+        "MEMORY": MEMORY,
+        "RESROUCE_PACK": RESROUCE_PACK,
+        "RESOURCE_PACK_SHA1": RESOURCE_PACK_SHA1
+    }
+    filtered_env = dict((k, v) for k, v in env.iteritems() if v is not None)
+    env_string = reduce(lambda accum, e: "%s -e %s=%s" % (accum, e[0], e[1]), filtered_env.items(), "")
+
     commands = [
-        "docker run -d -e EULA=TRUE -e WORLD=%s -e SLACK_WEBHOOK_URL=%s --name minecraft -p 25565:25565 morishin127/minecraft-server" % (world_path, SLACK_INCOMING_WEBHOOK_URL)
+        "docker run -d %s --name minecraft -p 25565:25565 morishin127/minecraft-server" % (env_string)
     ]
     _exec_commands(client, commands)
 
@@ -155,9 +169,9 @@ def _create_droplet(public_key):
             keys.append(key)
         droplet = digitalocean.Droplet(token=DIGITALOCEAN_API_TOKEN,
                                     name="minecraft",
-                                    region= DIGITALOCEAN_REGION_SLUG if DIGITALOCEAN_REGION_SLUG is not None else "sgp1",
+                                    region= DIGITALOCEAN_REGION_SLUG,
                                     image="docker-18-04",
-                                    size_slug="2gb",
+                                    size_slug=DIGITAL_OCEAN_SIZE_SLUG,
                                     ssh_keys=keys,
                                     backups=False)
         droplet.create()
